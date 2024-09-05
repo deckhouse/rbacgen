@@ -1,0 +1,12 @@
+module: MODULE_NAME
+scopes:
+  - SCOPE
+  - SCOPE
+crds:
+  - path/to/crds/*.yaml
+allowedResources:
+  - group: test.group.io
+    resources:
+      - all
+forbiddenResources:
+  - badresources
