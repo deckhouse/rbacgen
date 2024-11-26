@@ -11,7 +11,7 @@ var (
 	VerbsEdit = []string{"create", "update", "patch", "delete", "deletecollection"}
 )
 
-var scopeTemplate = "rbac.deckhouse.io/aggregate-to-%s-as"
+var subsystemTemplate = "rbac.deckhouse.io/aggregate-to-%s-as"
 
 const (
 	VerbView = "view"
@@ -28,7 +28,7 @@ const (
 	RoleViewer  = "viewer"
 )
 
-func buildRoles(module, namespace string, scopes []string, manageResources, useResources map[string][]string) ([]*rbacv1.ClusterRole, []*rbacv1.ClusterRole) {
+func buildRoles(module, namespace string, subsystems []string, manageResources, useResources map[string][]string) ([]*rbacv1.ClusterRole, []*rbacv1.ClusterRole) {
 	var useViewRules, useEditRules, manageViewRules, manageEditRules []rbacv1.PolicyRule
 
 	// rules for manage roles
@@ -76,19 +76,19 @@ func buildRoles(module, namespace string, scopes []string, manageResources, useR
 	}
 
 	var manageRoles = []*rbacv1.ClusterRole{
-		buildRole(module, namespace, scopes, RoleViewer, KindManage, VerbView, manageViewRules),
-		buildRole(module, namespace, scopes, RoleManager, KindManage, VerbEdit, manageEditRules),
+		buildRole(module, namespace, subsystems, RoleViewer, KindManage, VerbView, manageViewRules),
+		buildRole(module, namespace, subsystems, RoleManager, KindManage, VerbEdit, manageEditRules),
 	}
 
 	var useRoles []*rbacv1.ClusterRole
 	if len(useEditRules) > 0 && len(useViewRules) > 0 {
-		useRoles = append(useRoles, buildRole(module, namespace, scopes, RoleViewer, KindUse, VerbView, useViewRules))
-		useRoles = append(useRoles, buildRole(module, namespace, scopes, RoleManager, KindUse, VerbEdit, useEditRules))
+		useRoles = append(useRoles, buildRole(module, namespace, subsystems, RoleViewer, KindUse, VerbView, useViewRules))
+		useRoles = append(useRoles, buildRole(module, namespace, subsystems, RoleManager, KindUse, VerbEdit, useEditRules))
 	}
 
 	return manageRoles, useRoles
 }
-func buildRole(module, namespace string, scopes []string, rbacRole, rbacKind, rbacVerb string, rules []rbacv1.PolicyRule) *rbacv1.ClusterRole {
+func buildRole(module, namespace string, subsystems []string, rbacRole, rbacKind, rbacVerb string, rules []rbacv1.PolicyRule) *rbacv1.ClusterRole {
 	var role *rbacv1.ClusterRole
 	if rbacKind == KindUse {
 		role = &rbacv1.ClusterRole{
@@ -115,7 +115,7 @@ func buildRole(module, namespace string, scopes []string, rbacRole, rbacKind, rb
 				Kind:       "ClusterRole",
 			},
 			ObjectMeta: apimachineryv1.ObjectMeta{
-				Name: fmt.Sprintf("d8:%s:capability:module:%s:%s", rbacKind, module, rbacVerb),
+				Name: fmt.Sprintf("d8:%s:permission:module:%s:%s", rbacKind, module, rbacVerb),
 				Labels: map[string]string{
 					"heritage":                "deckhouse",
 					"module":                  module,
@@ -125,8 +125,8 @@ func buildRole(module, namespace string, scopes []string, rbacRole, rbacKind, rb
 			},
 			Rules: rules,
 		}
-		for _, scope := range scopes {
-			role.ObjectMeta.Labels[fmt.Sprintf(scopeTemplate, scope)] = rbacRole
+		for _, subsystem := range subsystems {
+			role.ObjectMeta.Labels[fmt.Sprintf(subsystemTemplate, subsystem)] = rbacRole
 		}
 		if namespace != "none" {
 			role.ObjectMeta.Labels["rbac.deckhouse.io/namespace"] = namespace

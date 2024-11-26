@@ -18,7 +18,7 @@ const RolesBasePath = "templates/rbacv2"
 type Spec struct {
 	Module             string     `yaml:"module"`
 	Namespace          string     `json:"namespace"`
-	Scopes             []string   `yaml:"scopes"`
+	Subsystems         []string   `yaml:"subsystems"`
 	CRDs               []string   `yaml:"crds"`
 	AllowedResources   []Resource `yaml:"allowedResources"`
 	ForbiddenResources []string   `yaml:"forbiddenResources"`
@@ -35,8 +35,8 @@ func WalkAndRender(ctx context.Context, dir, docsPath string) error {
 		return err
 	}
 	docs := doc{
-		Scopes:  make(map[string]*scopeDoc),
-		Modules: make(map[string]*moduleDoc),
+		Subsystems: make(map[string]*subsystemDoc),
+		Modules:    make(map[string]*moduleDoc),
 	}
 	for _, spec := range specs {
 		moduleDocs, err := renderBySpec(ctx, spec)
@@ -44,7 +44,7 @@ func WalkAndRender(ctx context.Context, dir, docsPath string) error {
 			return err
 		}
 		docs.Modules[spec.Module] = moduleDocs
-		docs.addScopeDoc(spec.Module, spec.Scopes)
+		docs.addSubsystemDoc(spec.Module, spec.Subsystems)
 	}
 	return docs.writeTo(docsPath)
 }
@@ -105,7 +105,7 @@ func renderBySpec(ctx context.Context, spec *Spec) (*moduleDoc, error) {
 			return nil, err
 		}
 	}
-	return buildModuleDoc(spec.Namespace, spec.Scopes, manage, use), err
+	return buildModuleDoc(spec.Namespace, spec.Subsystems, manage, use), err
 }
 
 func parseAndBuildRoles(ctx context.Context, spec *Spec) ([]*rbacv1.ClusterRole, []*rbacv1.ClusterRole, error) {
@@ -138,6 +138,6 @@ func parseAndBuildRoles(ctx context.Context, spec *Spec) ([]*rbacv1.ClusterRole,
 	if err != nil {
 		return nil, nil, err
 	}
-	manage, use := buildRoles(spec.Module, spec.Namespace, spec.Scopes, parsed.ClusterCRDs, parsed.NamespacedCRDs)
+	manage, use := buildRoles(spec.Module, spec.Namespace, spec.Subsystems, parsed.ClusterCRDs, parsed.NamespacedCRDs)
 	return manage, use, nil
 }

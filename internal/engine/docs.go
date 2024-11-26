@@ -9,18 +9,18 @@ import (
 )
 
 type doc struct {
-	Scopes  map[string]*scopeDoc  `json:"scopes"`
-	Modules map[string]*moduleDoc `json:"modules"`
+	Subsystems map[string]*subsystemDoc `json:"subsystems"`
+	Modules    map[string]*moduleDoc    `json:"modules"`
 }
 
-type scopeDoc struct {
+type subsystemDoc struct {
 	Modules       []string `json:"modules"`
 	Namespaces    []string `json:"namespaces"`
 	namespacesSet sets.Set[string]
 }
 
 type moduleDoc struct {
-	Scopes       []string        `json:"scopes"`
+	Subsystems   []string        `json:"subsystems"`
 	Capabilities capabilitiesDoc `json:"capabilities"`
 	Namespace    string          `json:"namespace"`
 }
@@ -33,30 +33,30 @@ type capabilityDoc struct {
 	Rules []rbacv1.PolicyRule `json:"rules"`
 }
 
-func (d *doc) addScopeDoc(module string, scopes []string) {
-	for _, scope := range scopes {
-		if found, ok := d.Scopes[scope]; ok {
+func (d *doc) addSubsystemDoc(module string, subsystems []string) {
+	for _, subsystem := range subsystems {
+		if found, ok := d.Subsystems[subsystem]; ok {
 			found.Modules = append(found.Modules, module)
 			if d.Modules[module].Namespace != "none" {
 				found.namespacesSet.Insert(d.Modules[module].Namespace)
 			}
-			d.Scopes[scope] = found
+			d.Subsystems[subsystem] = found
 		} else {
-			docs := &scopeDoc{Modules: []string{module}, namespacesSet: sets.New[string]()}
+			docs := &subsystemDoc{Modules: []string{module}, namespacesSet: sets.New[string]()}
 			if d.Modules[module].Namespace != "none" {
 				docs.namespacesSet.Insert(d.Modules[module].Namespace)
 			}
-			d.Scopes[scope] = docs
+			d.Subsystems[subsystem] = docs
 		}
 	}
 }
 
 func (d *doc) writeTo(path string) error {
-	for key, docs := range d.Scopes {
-		if val, ok := d.Scopes[key]; ok {
+	for key, docs := range d.Subsystems {
+		if val, ok := d.Subsystems[key]; ok {
 			val.Namespaces = docs.namespacesSet.UnsortedList()
 			sort.Strings(val.Namespaces)
-			d.Scopes[key] = val
+			d.Subsystems[key] = val
 		}
 	}
 
@@ -68,8 +68,8 @@ func (d *doc) writeTo(path string) error {
 	return os.WriteFile(path, marshaled, 0666)
 }
 
-func buildModuleDoc(namespace string, scopes []string, manageRoles, useRoles []*rbacv1.ClusterRole) *moduleDoc {
-	docs := &moduleDoc{Scopes: scopes, Namespace: namespace}
+func buildModuleDoc(namespace string, subsystems []string, manageRoles, useRoles []*rbacv1.ClusterRole) *moduleDoc {
+	docs := &moduleDoc{Subsystems: subsystems, Namespace: namespace}
 	for _, role := range manageRoles {
 		docs.Capabilities.Manage = append(docs.Capabilities.Manage, capabilityDoc{
 			Name:  role.Name,
