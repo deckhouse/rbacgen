@@ -99,10 +99,10 @@ func buildRole(module, namespace string, subsystems []string, rbacRole, rbacKind
 			ObjectMeta: apimachineryv1.ObjectMeta{
 				Name: fmt.Sprintf("d8:%s:capability:module:%s:%s", rbacKind, module, rbacVerb),
 				Labels: map[string]string{
-					"heritage":                            "deckhouse",
-					"module":                              module,
-					"rbac.deckhouse.io/kind":              rbacKind,
-					"rbac.deckhouse.io/aggregate-to-role": rbacRole,
+					"heritage":               "deckhouse",
+					"module":                 module,
+					"rbac.deckhouse.io/kind": rbacKind,
+					"rbac.deckhouse.io/aggregate-to-kubernetes-role": rbacRole,
 				},
 			},
 			Rules: rules,
