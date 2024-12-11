@@ -102,7 +102,7 @@ func buildRole(module, namespace string, subsystems []string, rbacRole, rbacKind
 					"heritage":               "deckhouse",
 					"module":                 module,
 					"rbac.deckhouse.io/kind": rbacKind,
-					"rbac.deckhouse.io/aggregate-to-kubernetes-role": rbacRole,
+					"rbac.deckhouse.io/aggregate-to-kubernetes-as": rbacRole,
 				},
 			},
 			Rules: rules,
