@@ -1,7 +1,7 @@
 module: MODULE_NAME
-scopes:
-  - SCOPE
-  - SCOPE
+subsystems:
+  - SUBSYSTEM
+  - SUBSYSTEM
 crds:
   - path/to/crds/*.yaml
 allowedResources:
