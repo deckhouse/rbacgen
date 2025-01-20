@@ -128,7 +128,7 @@ func (p *parser) processFile(ctx context.Context, path string, spec *models.Spec
 }
 
 func (p *parser) parseCRD(_ context.Context, spec *models.Spec, reader io.Reader, bufferSize int) (*apiextensionv1.CustomResourceDefinition, error) {
-	crd := new(apiextensionv1.CustomResourceDefinition)
+	var crd *apiextensionv1.CustomResourceDefinition
 	if err := apimachineryYaml.NewYAMLOrJSONDecoder(reader, bufferSize).Decode(&crd); err != nil {
 		return nil, err
 	}
@@ -140,10 +140,6 @@ func (p *parser) parseCRD(_ context.Context, spec *models.Spec, reader io.Reader
 
 	if crd.APIVersion != apiextensionv1.SchemeGroupVersion.String() && crd.Kind != customResourceDefinitionKind {
 		return nil, fmt.Errorf("invalid CRD('%s/%s')", crd.APIVersion, crd.Kind)
-	}
-
-	if strings.Contains(crd.Name, "templates.gatekeeper.sh") {
-		println()
 	}
 
 	if filter(spec, crd.Spec.Group, crd.Spec.Names.Plural) {

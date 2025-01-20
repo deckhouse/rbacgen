@@ -111,9 +111,17 @@ func buildRoles(module *models.Module, manageResources, useResources map[string]
 		return cmp.Compare(r1.APIGroups[0], r2.APIGroups[0])
 	})
 
+	for _, group := range manageViewRules {
+		slices.Sort(group.Resources)
+	}
+
 	slices.SortFunc(useEditRules, func(r1, r2 rbacv1.PolicyRule) int {
 		return cmp.Compare(r1.APIGroups[0], r2.APIGroups[0])
 	})
+
+	for _, group := range useEditRules {
+		slices.Sort(group.Resources)
+	}
 
 	// rules for use roles
 	for group, resources := range useResources {

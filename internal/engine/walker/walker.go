@@ -92,23 +92,36 @@ func parseDefinition(path string) (*models.Definition, error) {
 }
 
 func parseSpec(root, path string) (*models.Spec, error) {
-	if _, err := os.Stat(path); err != nil && os.IsNotExist(err) {
-		return nil, nil
-	}
-
-	raw, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-
 	spec := new(models.Spec)
-	if err = yaml.Unmarshal(raw, spec); err != nil {
-		return nil, err
+
+	if _, err := os.Stat(path); err == nil {
+		raw, err := os.ReadFile(path)
+		if err != nil {
+			return nil, err
+		}
+
+		if err = yaml.Unmarshal(raw, spec); err != nil {
+			return nil, err
+		}
+
+		for idx, crd := range spec.CRDs {
+			spec.CRDs[idx] = filepath.Join(root, crd)
+		}
 	}
 
-	for idx, crd := range spec.CRDs {
-		spec.CRDs[idx] = filepath.Join(root, crd)
+	crdPath := filepath.Join(filepath.Dir(path), "crds")
+	if _, err := os.Stat(crdPath); err == nil {
+		spec.CRDs = append(spec.CRDs, filepath.Join(root, crdPath, "*.yaml"))
+		if _, err = os.Stat(filepath.Join(crdPath, "internal")); err == nil {
+			spec.CRDs = append(spec.CRDs, filepath.Join(root, crdPath, "internal", "*.yaml"))
+		}
+		if _, err = os.Stat(filepath.Join(crdPath, "native")); err == nil {
+			spec.CRDs = append(spec.CRDs, filepath.Join(crdPath, "native", "*.yaml"))
+		}
 	}
+
+	// to remove duplicate
+	spec.CRDs = slices.Compact(spec.CRDs)
 
 	return spec, nil
 }
