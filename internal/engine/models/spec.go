@@ -12,12 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package models
 
-import (
-	"github.com/deckhouse/rbacgen/internal/app"
+const (
+	DefinitionFile = "module.yaml"
+	SpecFile       = "rbac.yaml"
 )
 
-func main() {
-	app.Execute()
+type Module struct {
+	Path       string
+	Definition *Definition
+	Spec       *Spec
+}
+
+type Definition struct {
+	Name       string
+	Namespace  string
+	Subsystems []string
+}
+type Spec struct {
+	CRDs               []string   `yaml:"crds"`
+	AllowedResources   []Resource `yaml:"allowedResources"`
+	ForbiddenResources []string   `yaml:"forbiddenResources"`
+}
+type Resource struct {
+	Group     string   `yaml:"group"`
+	Resources []string `yaml:"resources"`
 }

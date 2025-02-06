@@ -16,55 +16,39 @@ Use the following command to generate roles and docs:
 
 ### Adding a Module
 
-To add a module, create a file named rbac.yaml in the module’s directory.
+To add a module, create a file named module.yaml(and rbac.yaml if you want to add specific rules for generator) in the module’s directory.
 
-This file contains the information required by the generator to create the roles.
+The module.yaml file contains the information required to identify module.
+
+The rbac.yaml file contains additional rules for parsing CRDs.
 
 ### Spec examples
 
 Below is an example for the ```deckhouse``` module. 
-It includes the module name, module namespace, subsystems, and the path to the CRDs:
+It includes the module name, module namespace, subsystems, and the path to the CRDs(tools tries to discover CRDs in the module dir, but if CRDs are located in other locations - they can be specified in rbac.yaml):
+
+module.yaml
 ```yaml
-module: deckhouse
+name: deckhouse
+weight: 2
 namespace: d8-system
 subsystems:
   - deckhouse
-crds:
-  - deckhouse-controller/crds/*.yaml
 ```
 
-Some modules do not have a namespace. For these modules, you need to explicitly set the namespace field to ```none```:
+rbac.yaml:
 ```yaml
-module: priority-class
-namespace: none
-subsystems:
-  - kubernetes
+crds:
+  - deckhouse-controller/crds/*.yaml
 ```
 
 Even though this module does not have CRDs, manage roles will still be generated, 
 as these roles are responsible for managing the module’s configuration.
 
-In many cases, specifying the namespace is not necessary. If the namespace field is omitted, 
-the tool assumes the namespace is ```d8-MODULE_NAME```:
-
-```yaml
-module: ceph-csi
-subsystems:
-  - storage
-  - infrastructure
-crds:
-  - modules/031-ceph-csi/crds/*.yaml
-```
-
 By default, the tool generates roles only for resources in the ```deckhouse.io``` group. 
 However, if a module provides additional resources in other groups, 
-you can include them by specifying them in the configuration:
+you can include them by specifying them in the spec(rbac.yaml):
 ```yaml
-module: operator-trivy
-subsystems:
-  - security
-crds:
-  - ee/modules/500-operator-trivy/crds/native/*.yaml
 allowedResources:
   - group: aquasecurity.github.io
     resources:

@@ -12,12 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package engine
 
 import (
-	"github.com/deckhouse/rbacgen/internal/app"
+	"context"
+
+	"github.com/deckhouse/rbacgen/internal/engine/renderer"
+	"github.com/deckhouse/rbacgen/internal/engine/walker"
 )
 
-func main() {
-	app.Execute()
+func WalkAndRender(ctx context.Context, dir, docsPath string) error {
+	modules, err := walker.WalkModules(dir)
+	if err != nil {
+		return err
+	}
+
+	docs, err := renderer.Render(ctx, modules)
+	if err != nil {
+		return err
+	}
+
+	return docs.WriteTo(docsPath)
 }
